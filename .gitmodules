@@ -1,0 +1,3 @@
+[submodule "monero-feather-bin/monero-feather-bin"]
+	path = monero-feather-bin/monero-feather-bin
+	url = ssh://aur@aur.archlinux.org/monero-feather-bin.git
