@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+cd "$(dirname "$0")" # https://unix.stackexchange.com/a/321846
+
+makepkg -f --clean
+rm -v feather-*.AppImage*
+rm -v monero-feather-bin-*pkg.tar.zst
