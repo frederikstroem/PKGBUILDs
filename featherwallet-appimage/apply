@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+cd "$(dirname "$0")" # https://unix.stackexchange.com/a/321846
+
+target=featherwallet-appimage
+
+cp -v PKGBUILD $target/PKGBUILD
+makepkg --printsrcinfo > $target/.SRCINFO
