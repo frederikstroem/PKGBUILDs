@@ -2,9 +2,11 @@ import os
 import subprocess
 import requests
 import re
+import hashlib
+import json
+
 from git import Repo
 from github import Github
-import hashlib
 
 REPOS = [
     {
@@ -71,8 +73,9 @@ def main():
     for repo_info in REPOS:
         appimage_dir = repo_info['appimage_dir']
         github_repo = repo_info['github_repo']
+        owner = github_repo.split('/')[0]  # Extract the owner from the repo string
 
-        version = get_latest_tag(github_repo)
+        version = get_latest_tag(owner, github_repo)
 
         pkgbuild_path = os.path.join(appimage_dir, 'PKGBUILD')
         with open(pkgbuild_path, 'r') as f:
