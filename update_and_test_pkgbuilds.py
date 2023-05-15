@@ -69,6 +69,9 @@ def replace_checksums(content, checksum_name, new_checksums):
     return content
 
 def main():
+    if not TOKEN_GITHUB:
+        raise ValueError("Invalid or missing TOKEN_GITHUB environment variable. Please set a valid GitHub personal access token.")
+
     g = Github(TOKEN_GITHUB)
     for repo_info in REPOS:
         appimage_dir = repo_info['appimage_dir']
