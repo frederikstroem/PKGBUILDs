@@ -34,10 +34,15 @@ def get_old_version(pkgbuild_file):
         else:
             raise ValueError("Couldn't find OLD_VERSION in the PKGBUILD file.")
 
-def get_latest_release(repo):
-    url = f'https://api.github.com/repos/{repo}/releases/latest'
+def get_latest_tag(owner, repo):
+    url = f'https://api.github.com/repos/{owner}/{repo}/tags'
     response = requests.get(url, headers=headers)
-    return response.json()
+    if response.status_code == 200:
+        tags = response.json()
+        if tags:
+            latest_tag = tags[0]['name']
+            return latest_tag
+    raise ValueError("Failed to retrieve the latest tag.")
 
 def get_checksum(url, algorithm='sha256'):
     response = requests.get(url, stream=True)
@@ -67,8 +72,7 @@ def main():
         appimage_dir = repo_info['appimage_dir']
         github_repo = repo_info['github_repo']
 
-        release_info = get_latest_release(github_repo)
-        version = release_info['tag_name']
+        version = get_latest_tag(github_repo)
 
         pkgbuild_path = os.path.join(appimage_dir, 'PKGBUILD')
         with open(pkgbuild_path, 'r') as f:
