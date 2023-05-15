@@ -4,6 +4,7 @@ import requests
 import re
 from git import Repo
 from github import Github
+import hashlib
 
 REPOS = [
     {
@@ -38,6 +39,28 @@ def get_latest_release(repo):
     response = requests.get(url, headers=headers)
     return response.json()
 
+def get_checksum(url, algorithm='sha256'):
+    response = requests.get(url, stream=True)
+    if algorithm == 'sha256':
+        h = hashlib.sha256()
+    elif algorithm == 'blake2b':
+        h = hashlib.blake2b()
+    else:
+        raise ValueError(f"Unknown algorithm: {algorithm}")
+
+    for chunk in response.iter_content(chunk_size=8192):
+        h.update(chunk)
+    return h.hexdigest()
+
+def replace_checksums(content, checksum_name, new_checksums):
+    checksum_line = re.search(f'{checksum_name}=\((.*?)\)', content)
+    if checksum_line:
+        checksums = checksum_line.group(1).split()
+        for i, checksum in enumerate(checksums):
+            if checksum != 'SKIP':
+                content = content.replace(checksum, new_checksums[i])
+    return content
+
 def main():
     g = Github(TOKEN_GITHUB)
     for repo_info in REPOS:
@@ -54,6 +77,16 @@ def main():
         old_version = get_old_version(pkgbuild_path)
 
         content = content.replace(f"OLD_VERSION={old_version}", f"OLD_VERSION={version}")
+
+        url_match = re.search(r'source=\[(.*?)\]', content)
+        if url_match:
+            urls = url_match.group(1).split()
+            new_sha256_checksums = [get_checksum(url.replace('${pkgver}', version), 'sha256') for url in urls if url != 'SKIP']
+            new_b2_checksums = [get_checksum(url.replace('${pkgver}', version), 'blake2b') for url in urls if url != 'SKIP']
+
+            content = replace_checksums(content, 'sha256sums', new_sha256_checksums)
+            content = replace_checksums(content, 'b2sums', new_b2_checksums)
+
 
         with open(pkgbuild_path, 'w') as f:
             f.write(content)
