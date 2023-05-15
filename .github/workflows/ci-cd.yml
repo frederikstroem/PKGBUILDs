@@ -1,29 +1,30 @@
-name: CI/CD Pipeline
-
+name: Update PKGBUILD
 on:
-  repository_dispatch:
-    types: [new_release]
+  schedule:
+    - cron: '0 0 * * *'  # Run daily at midnight
+  workflow_dispatch:  # Allow manual triggering of the workflow
 
 jobs:
-  update_and_test:
+  update:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v3
         with:
-          submodules: true
+          python-version: 3.11
 
-      - name: Setup Python
-        uses: actions/setup-python@v2
+      - name: Check out code
+        uses: actions/checkout@v3
         with:
-          python-version: '3.x'
+          fetch-depth: 0  # Fetch all history so we can push to other branches
 
       - name: Install dependencies
         run: |
-          pip install --upgrade pip
-          # Add any other dependencies required for your project here
+          python -m pip install --upgrade pip
+          pip install requests gitpython PyGithub
 
-      - name: Update and test PKGBUILDs
-        run: |
-          python update_and_test_pkgbuilds.py
+      - name: Run update script
+        run: python update_and_test_pkgbuilds.py
+        env:
+          TOKEN_GITHUB: ${{ secrets.TOKEN_GITHUB }}
+          GITHUB_USER: ${{ github.repository_owner }}

@@ -2,6 +2,8 @@ import os
 import subprocess
 import requests
 import re
+from git import Repo
+from github import Github
 
 REPOS = [
     {
@@ -14,7 +16,14 @@ REPOS = [
     },
 ]
 
-# Function to get the old version from PKGBUILD
+TOKEN_GITHUB = os.getenv('TOKEN_GITHUB')
+GITHUB_USER = os.getenv('GITHUB_USER')  # Your GitHub username
+
+headers = {
+    'Authorization': f'token {TOKEN_GITHUB}',
+    'Accept': 'application/vnd.github.v3+json',
+}
+
 def get_old_version(pkgbuild_file):
     with open(pkgbuild_file, 'r') as f:
         content = f.read()
@@ -26,10 +35,11 @@ def get_old_version(pkgbuild_file):
 
 def get_latest_release(repo):
     url = f'https://api.github.com/repos/{repo}/releases/latest'
-    response = requests.get(url)
+    response = requests.get(url, headers=headers)
     return response.json()
 
 def main():
+    g = Github(TOKEN_GITHUB)
     for repo_info in REPOS:
         appimage_dir = repo_info['appimage_dir']
         github_repo = repo_info['github_repo']
@@ -37,11 +47,10 @@ def main():
         release_info = get_latest_release(github_repo)
         version = release_info['tag_name']
 
-        # Update PKGBUILD with the new version
         pkgbuild_path = os.path.join(appimage_dir, 'PKGBUILD')
         with open(pkgbuild_path, 'r') as f:
             content = f.read()
-        # Find the old version
+
         old_version = get_old_version(pkgbuild_path)
 
         content = content.replace(f"OLD_VERSION={old_version}", f"OLD_VERSION={version}")
@@ -49,19 +58,31 @@ def main():
         with open(pkgbuild_path, 'w') as f:
             f.write(content)
 
-        # Test the PKGBUILD
         test_script_path = os.path.join(appimage_dir, 'test')
         subprocess.check_call(['bash', test_script_path])
 
-        # Apply the changes
         apply_script_path = os.path.join(appimage_dir, 'apply')
         subprocess.check_call(['bash', apply_script_path])
 
-        # # Commit and push the changes
-        # commit_message = f"Update {appimage_dir} to version {version}"
-        # subprocess.check_call(['git', 'add', pkgbuild_path])
-        # subprocess.check_call(['git', 'commit', '-m', commit_message])
-        # subprocess.check_call(['git', 'push'])
+        # Use gitpython to create a new branch and commit the changes
+        repo = Repo(os.getcwd())
+        new_branch = repo.create_head(f"update-{appimage_dir}-to-{version}")
+        new_branch.checkout()
+        repo.index.add([pkgbuild_path])
+        repo.index.commit(f"Update {appimage_dir} to version {version}")
+
+        # Push the new branch to GitHub
+        origin = repo.remote("origin")
+        origin.push(f"{new_branch}:{new_branch}")
+
+        # Use PyGithub to create a new pull request
+        gh_repo = g.get_repo(f"{GITHUB_USER}/{github_repo}")
+        pr = gh_repo.create_pull(
+            title=f"Update {appimage_dir} to version {version}",
+            body="",
+            head=f"{GITHUB_USER}:{new_branch}",
+            base="main",
+        )
 
 if __name__ == "__main__":
     main()
