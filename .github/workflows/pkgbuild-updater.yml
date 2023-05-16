@@ -26,9 +26,11 @@ jobs:
           docker exec arch-container bash -c "pip install requests gitpython PyGithub"
           docker exec arch-container bash -c "useradd -m builduser && echo 'builduser ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/builduser && chmod 0440 /etc/sudoers.d/builduser"
 
-      - name: Run update script
-        run: docker exec arch-container bash -c "su - builduser -c 'env TOKEN_GITHUB=${{ secrets.TOKEN_GITHUB }} GITHUB_USER=${{ github.repository_owner }} python /workdir/update_and_test_pkgbuilds.py'"
+      - name: Change workdir permissions inside Arch container
+        run: docker exec arch-container bash -c "chown -R builduser:builduser /workdir"
 
+      - name: Run update script inside Arch container
+        run: docker exec arch-container bash -c "su - builduser -c 'env TOKEN_GITHUB=${{ secrets.TOKEN_GITHUB }} GITHUB_USER=${{ github.repository_owner }} python /workdir/update_and_test_pkgbuilds.py'"
 
       - name: Cleanup Docker container
         if: always()
