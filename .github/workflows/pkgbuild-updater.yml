@@ -1,4 +1,4 @@
-name: Add PKGBUILD Update PRs
+name: PKGBUILD Updater
 on:
   push:
     branches:
