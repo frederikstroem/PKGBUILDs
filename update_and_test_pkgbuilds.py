@@ -27,6 +27,15 @@ headers = {
     'Accept': 'application/vnd.github.v3+json',
 }
 
+def apply_changes(appimage_dir, pkgbuild_path):
+    subprocess.check_call(['cp', '-v', 'PKGBUILD', f'{appimage_dir}/PKGBUILD'])
+    subprocess.check_call(['makepkg', '--printsrcinfo', '>', f'{appimage_dir}/.SRCINFO'])
+
+def test_pkgbuild(appimage_dir):
+    subprocess.check_call(['makepkg', '-f', '--clean'], cwd=appimage_dir)
+    subprocess.check_call(['rm', '-v', f'{appimage_dir}/*_amd64.AppImage*'])
+    subprocess.check_call(['rm', '-v', f'{appimage_dir}-*-x86_64.pkg.tar.zst'])
+
 def get_old_version(pkgbuild_file):
     with open(pkgbuild_file, 'r') as f:
         content = f.read()
@@ -69,9 +78,6 @@ def replace_checksums(content, checksum_name, new_checksums):
                 content = content.replace(checksum, new_checksums[i])
     return content
 
-def sanitize_version(version):
-    return version.replace(':', '_').replace('/', '_').replace('-', '_').replace(' ', '')
-
 def main():
     if not TOKEN_GITHUB:
         raise ValueError("Invalid or missing TOKEN_GITHUB environment variable. Please set a valid GitHub personal access token.")
@@ -83,9 +89,8 @@ def main():
         owner = github_repo.split('/')[0]  # Extract the owner from the repo string
         repo = github_repo.split('/')[1]  # Extract the repo from the repo string
 
-        unsanitized_version = get_latest_tag(owner, repo)
-        version = sanitize_version(unsanitized_version)
-        print(f"Latest version of {github_repo} is {version}, unsanitized version is {unsanitized_version}.")
+        version = get_latest_tag(owner, repo)
+        print(f"Latest version of {github_repo} is {version}.")
 
         pkgbuild_path = os.path.join(appimage_dir, 'PKGBUILD')
         with open(pkgbuild_path, 'r') as f:
@@ -108,11 +113,14 @@ def main():
         with open(pkgbuild_path, 'w') as f:
             f.write(content)
 
-        test_script_path = os.path.join(appimage_dir, 'test')
-        subprocess.check_call(['bash', test_script_path])
+        # test_script_path = os.path.join(appimage_dir, 'test')
+        # subprocess.check_call(['bash', test_script_path])
 
-        apply_script_path = os.path.join(appimage_dir, 'apply')
-        subprocess.check_call(['bash', apply_script_path])
+        # apply_script_path = os.path.join(appimage_dir, 'apply')
+        # subprocess.check_call(['bash', apply_script_path])
+
+        apply_changes(appimage_dir, pkgbuild_path)
+        test_pkgbuild(appimage_dir)
 
         # Use gitpython to create a new branch and commit the changes
         repo = Repo(os.getcwd())
