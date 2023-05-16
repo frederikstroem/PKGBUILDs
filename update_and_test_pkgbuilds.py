@@ -30,7 +30,7 @@ headers = {
 def get_old_version(pkgbuild_file):
     with open(pkgbuild_file, 'r') as f:
         content = f.read()
-        old_version_match = re.search(r'pkgver="(.+?)"', content)
+        old_version_match = re.search(r'pkgver=(.+?)', content)
         if old_version_match:
             return old_version_match.group(1)
         else:
