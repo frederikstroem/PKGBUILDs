@@ -69,6 +69,9 @@ def replace_checksums(content, checksum_name, new_checksums):
                 content = content.replace(checksum, new_checksums[i])
     return content
 
+def sanitize_version(version):
+    return version.replace(':', '_').replace('/', '_').replace('-', '_').replace(' ', '')
+
 def main():
     if not TOKEN_GITHUB:
         raise ValueError("Invalid or missing TOKEN_GITHUB environment variable. Please set a valid GitHub personal access token.")
@@ -80,7 +83,9 @@ def main():
         owner = github_repo.split('/')[0]  # Extract the owner from the repo string
         repo = github_repo.split('/')[1]  # Extract the repo from the repo string
 
-        version = get_latest_tag(owner, repo)
+        unsanitized_version = get_latest_tag(owner, repo)
+        version = sanitize_version(unsanitized_version)
+        print(f"Latest version of {github_repo} is {version}, unsanitized version is {unsanitized_version}.")
 
         pkgbuild_path = os.path.join(appimage_dir, 'PKGBUILD')
         with open(pkgbuild_path, 'r') as f:
