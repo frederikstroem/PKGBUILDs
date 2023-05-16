@@ -10,11 +10,11 @@ from github import Github
 
 REPOS = [
     {
-        'appimage_dir': 'featherwallet-appimage',
+        'appimage_dir': '/workdir/featherwallet-appimage',
         'github_repo': 'feather-wallet/feather',
     },
     {
-        'appimage_dir': 'chatbox-appimage',
+        'appimage_dir': '/workdir/chatbox-appimage',
         'github_repo': 'Bin-Huang/chatbox',
     },
 ]
