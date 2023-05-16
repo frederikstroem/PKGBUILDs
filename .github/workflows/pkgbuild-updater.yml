@@ -1,5 +1,8 @@
 name: Add PKGBUILD Update PRs
 on:
+  push:
+    branches:
+      - main
   schedule:
     #- cron: '0 0 * * *'  # Run daily at midnight
     - cron: '0 0 */3 * *'  # Run every three days at midnight
