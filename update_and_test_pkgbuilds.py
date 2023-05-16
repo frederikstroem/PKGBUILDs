@@ -30,11 +30,11 @@ headers = {
 def get_old_version(pkgbuild_file):
     with open(pkgbuild_file, 'r') as f:
         content = f.read()
-        old_version_match = re.search(r'OLD_VERSION="(.+?)"', content)
+        old_version_match = re.search(r'pkgver="(.+?)"', content)
         if old_version_match:
             return old_version_match.group(1)
         else:
-            raise ValueError("Couldn't find OLD_VERSION in the PKGBUILD file.")
+            raise ValueError("Couldn't find pkgver in the PKGBUILD file.")
 
 def get_latest_tag(owner, repo):
     url = f'https://api.github.com/repos/{owner}/{repo}/tags'
@@ -88,7 +88,7 @@ def main():
 
         old_version = get_old_version(pkgbuild_path)
 
-        content = content.replace(f"OLD_VERSION={old_version}", f"OLD_VERSION={version}")
+        content = content.replace(f"pkgver={old_version}", f"pkgver={version}")
 
         url_match = re.search(r'source=\[(.*?)\]', content)
         if url_match:
