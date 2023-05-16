@@ -26,10 +26,7 @@ jobs:
           docker exec arch-container bash -c "pip install requests gitpython PyGithub"
 
       - name: Run update script
-        run: docker exec arch-container bash -c "python update_and_test_pkgbuilds.py"
-        env:
-          TOKEN_GITHUB: ${{ secrets.TOKEN_GITHUB }}
-          GITHUB_USER: ${{ github.repository_owner }}
+        run: docker exec -e TOKEN_GITHUB=${{ secrets.TOKEN_GITHUB }} -e GITHUB_USER=${{ github.repository_owner }} arch-container bash -c "python update_and_test_pkgbuilds.py"
 
       - name: Cleanup Docker container
         if: always()
