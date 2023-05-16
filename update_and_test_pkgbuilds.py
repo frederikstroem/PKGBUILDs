@@ -44,6 +44,7 @@ def get_latest_tag(owner, repo):
         if tags:
             latest_tag = tags[0]['name']
             return latest_tag
+    print(f"Failed to retrieve tags for {owner}/{repo}. Response code: {response.status_code}, response text: {response.text}")
     raise ValueError("Failed to retrieve the latest tag.")
 
 def get_checksum(url, algorithm='sha256'):
@@ -77,8 +78,9 @@ def main():
         appimage_dir = repo_info['appimage_dir']
         github_repo = repo_info['github_repo']
         owner = github_repo.split('/')[0]  # Extract the owner from the repo string
+        repo = github_repo.split('/')[1]  # Extract the repo from the repo string
 
-        version = get_latest_tag(owner, github_repo)
+        version = get_latest_tag(owner, repo)
 
         pkgbuild_path = os.path.join(appimage_dir, 'PKGBUILD')
         with open(pkgbuild_path, 'r') as f:
