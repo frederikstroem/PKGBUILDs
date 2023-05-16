@@ -51,8 +51,9 @@ def get_latest_tag(owner, repo):
     if response.status_code == 200:
         tags = response.json()
         if tags:
-            latest_tag = tags[0]['name']
-            return latest_tag
+            for i in range(len(tags)):
+                if "beta" not in tags[i]['name'] and "rc" not in tags[i]['name']:
+                    return tags[i]['name']
     print(f"Failed to retrieve tags for {owner}/{repo}. Response code: {response.status_code}, response text: {response.text}")
     raise ValueError("Failed to retrieve the latest tag.")
 
