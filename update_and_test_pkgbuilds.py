@@ -28,7 +28,7 @@ headers = {
 }
 
 def apply_changes(appimage_dir, pkgbuild_path):
-    subprocess.check_call(['cp', '-v', 'PKGBUILD', f'{appimage_dir}/PKGBUILD'])
+    subprocess.check_call(['cp', '-v', f'{pkgbuild_path}', f'{appimage_dir}/PKGBUILD'])
     subprocess.check_call(['makepkg', '--printsrcinfo', '>', f'{appimage_dir}/.SRCINFO'])
 
 def test_pkgbuild(appimage_dir):
