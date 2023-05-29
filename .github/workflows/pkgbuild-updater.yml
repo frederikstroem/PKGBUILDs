@@ -27,6 +27,7 @@ jobs:
       - name: Install dependencies inside Arch container
         run: |
           docker exec arch-container bash -c "pacman -Syu --noconfirm base-devel git python-pip fakeroot binutils"
+          docker exec arch-container bash -c "pacman -Syu --noconfirm tor fuse2fs"
           docker exec arch-container bash -c "pip install requests gitpython PyGithub"
           docker exec arch-container bash -c "useradd -m builduser && echo 'builduser ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/builduser && chmod 0440 /etc/sudoers.d/builduser"
 
