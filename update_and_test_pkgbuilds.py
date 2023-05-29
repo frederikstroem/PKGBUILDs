@@ -27,9 +27,10 @@ headers = {
     'Accept': 'application/vnd.github.v3+json',
 }
 
-def apply_changes(appimage_dir, pkgbuild_path):
-    subprocess.check_call(['cp', '-v', f'{pkgbuild_path}', f'{appimage_dir}/PKGBUILD'])
-    subprocess.check_call(['makepkg', '--printsrcinfo', '>', f'{appimage_dir}/.SRCINFO'])
+# def apply_changes(appimage_dir, pkgbuild_path):
+#     target_dir = os.path.join(appimage_dir, os.path.basename(appimage_dir))
+#     subprocess.check_call(['cp', '-v', f'{pkgbuild_path}', f'{target_dir}/PKGBUILD'])
+#     subprocess.check_call(['makepkg', '--printsrcinfo', '>', f'{target_dir}/.SRCINFO'])
 
 def test_pkgbuild(appimage_dir):
     subprocess.check_call(['makepkg', '-f', '--clean'], cwd=appimage_dir)
@@ -120,8 +121,8 @@ def main():
         # apply_script_path = os.path.join(appimage_dir, 'apply')
         # subprocess.check_call(['bash', apply_script_path])
 
-        apply_changes(appimage_dir, pkgbuild_path)
         test_pkgbuild(appimage_dir)
+        # apply_changes(appimage_dir, pkgbuild_path)
 
         # Use gitpython to create a new branch and commit the changes
         repo = Repo(os.getcwd())
