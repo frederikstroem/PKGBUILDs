@@ -1,4 +1,6 @@
 # PKGBUILDs
+[![PKGBUILD Updater](https://github.com/frederikstroem/PKGBUILDs/actions/workflows/pkgbuild-updater.yml/badge.svg)](https://github.com/frederikstroem/PKGBUILDs/actions/workflows/pkgbuild-updater.yml)
+
 PKGBUILDs for the [AUR](https://aur.archlinux.org/) (Arch User Repository).
 
 AUR account: [frederikstroem](https://aur.archlinux.org/account/frederikstroem/)
