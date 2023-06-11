@@ -1,5 +1,5 @@
 *.AppImage
 *.zst
-*.asc
+*/*.asc
 .env
 ssh_key

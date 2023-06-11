@@ -1,0 +1,37 @@
+version: '3'
+
+services:
+
+  pkgbuild-updater:
+    container_name: pkgbuild-updater
+    environment:
+      - TOKEN_GITHUB=${TOKEN_GITHUB}
+      - GITHUB_USER=frederikstroem
+      - GIT_NAME=frederikstroem
+      - GIT_EMAIL=git@katofln.com
+    volumes:
+      - ./updater.py:/home/builduser/updater.py
+    build:
+      context: .
+      args:
+        - GIT_NAME=frederikstroem
+        - GIT_EMAIL=git@katofln.com
+        - GIT_REPO=git@github.com:frederikstroem/PKGBUILDs.git
+    ulimits:
+      nofile:
+        soft: 1024
+        hard: 524288
+
+  # https://github.com/mcuadros/ofelia
+  pkgbuild-updater-ofelia:
+    image: mcuadros/ofelia:latest # https://hub.docker.com/r/mcuadros/ofelia
+    container_name: pkgbuild-updater-ofelia
+    restart: unless-stopped
+    # environment:
+    #   - TOKEN_GITHUB=${TOKEN_GITHUB}
+    #   - GITHUB_USER=frederikstroem
+    #   - GIT_NAME=frederikstroem
+    #   - GIT_EMAIL=git@katofln.com
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./jobs.ini:/etc/ofelia/config.ini"
