@@ -5,7 +5,7 @@ FROM archlinux
 #
 
 # Remove snapper to increase speed
-RUN pacman -Rns --noconfirm snap-pac snapper
+# RUN pacman -Rns --noconfirm snap-pac snapper
 
 # Update the system and install necessary packages
 RUN pacman -Syu --noconfirm
@@ -14,7 +14,8 @@ RUN pacman -S --noconfirm base-devel git openssh python python-pip gnupg
 RUN pacman -Syu --noconfirm tor fuse2fs
 
 # Install pip dependencies
-RUN pip install requests gitpython
+# RUN pip install requests gitpython
+RUN pacman -S --noconfirm python-requests python-gitpython
 
 # Create a non-root user
 RUN useradd -m builduser && \

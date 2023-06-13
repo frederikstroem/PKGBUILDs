@@ -2,6 +2,19 @@ version: '3'
 
 services:
 
+  # https://github.com/mcuadros/ofelia
+  pkgbuild-updater-ofelia:
+    image: mcuadros/ofelia:latest # https://hub.docker.com/r/mcuadros/ofelia
+    depends_on:
+      - pkgbuild-updater
+    command: daemon --docker
+    container_name: pkgbuild-updater-ofelia
+    restart: unless-stopped
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    labels:
+      ofelia.job-run.pkgbuild-update.environment: '["TOKEN_GITHUB=${TOKEN_GITHUB}","GITHUB_USER=frederikstroem","GIT_NAME=frederikstroem","GIT_EMAIL=git@katofln.com"]'
+
   pkgbuild-updater:
     container_name: pkgbuild-updater
     environment:
@@ -21,17 +34,8 @@ services:
       nofile:
         soft: 1024
         hard: 524288
-
-  # https://github.com/mcuadros/ofelia
-  pkgbuild-updater-ofelia:
-    image: mcuadros/ofelia:latest # https://hub.docker.com/r/mcuadros/ofelia
-    container_name: pkgbuild-updater-ofelia
-    restart: unless-stopped
-    # environment:
-    #   - TOKEN_GITHUB=${TOKEN_GITHUB}
-    #   - GITHUB_USER=frederikstroem
-    #   - GIT_NAME=frederikstroem
-    #   - GIT_EMAIL=git@katofln.com
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - "./jobs.ini:/etc/ofelia/config.ini"
+    labels:
+      - "ofelia.enabled=true"
+      - "ofelia.job-exec.update-script.schedule=@every 4h"
+      - "ofelia.job-exec.update-script.command=python /home/builduser/updater.py"
+      - "ofelia.job-exec.update-script.no-overlap=true"
