@@ -7,8 +7,15 @@ import shutil
 import hashlib
 import subprocess
 import requests
+import logging
 
 from git import Repo, GitCommandError
+
+# Create logs directory if it doesn't exist
+if not os.path.exists('logs'):
+    os.makedirs('logs')
+
+logging.basicConfig(filename='./logs/updater.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Get the sleep duration from environment variable
 SLEEP_DURATION = int(os.getenv('SLEEP_DURATION', 14400))  # Default to 4 hours if not set
@@ -42,9 +49,11 @@ headers = {
 # Reset and clean a repository (removes new/untracked files)
 def reset_and_clean(repo_dir):
     repo = Repo(repo_dir)
-    print(f"Resetting and cleaning repository in {repo_dir}...", file=sys.stderr)
+    print(f"Resetting and cleaning repository in {repo_dir}...")
+    logging.info(f"Resetting and cleaning repository in {repo_dir}...")
     for submodule in repo.submodules:
-        print(f"Submodule: {submodule}", file=sys.stderr)
+        print(f"Submodule: {submodule}")
+        logging.info(f"Submodule: {submodule}")
         submodule_repo = submodule.module()
         try:
             submodule_repo.git.checkout('main')
@@ -53,6 +62,7 @@ def reset_and_clean(repo_dir):
                 submodule_repo.git.checkout('master')
             except GitCommandError:
                 print("Both main and master branches do not exist, staying on current branch.", file=sys.stderr)
+                logging.error("Both main and master branches do not exist, staying on current branch.")
         submodule_repo.git.pull()
         submodule_repo.git.reset('--hard')
         submodule_repo.git.clean('-fdx')
@@ -63,6 +73,7 @@ def reset_and_clean(repo_dir):
             repo.git.checkout('master')
         except GitCommandError:
             print("Both main and master branches do not exist, staying on current branch.", file=sys.stderr)
+            logging.error("Both main and master branches do not exist, staying on current branch.")
     repo.git.pull()
     repo.git.reset('--hard')
     repo.git.clean('-fdx')
@@ -93,7 +104,8 @@ def get_latest_tag(owner, repo):
                 if "beta" not in tag_name.lower() and "rc" not in tag_name.lower():
                     tag_name = tag_name.lstrip('vV')
                     return tag_name
-    print(f"Failed to retrieve tags for {owner}/{repo}. Response code: {response.status_code}, response text: {response.text}")
+    print(f"Failed to retrieve tags for {owner}/{repo}. Response code: {response.status_code}, response text: {response.text}", file=sys.stderr)
+    logging.error(f"Failed to retrieve tags for {owner}/{repo}. Response code: {response.status_code}, response text: {response.text}")
     raise ValueError("Failed to retrieve the latest tag.")
 
 # Compute the checksum of the given URL content
@@ -101,9 +113,12 @@ def get_checksum(url, algorithm='sha512'):
     response = requests.get(url, stream=True)
 
     if response.status_code != 200:
+        print(f"Failed to download the file. URL: {url}, Status code: {response.status_code}", file=sys.stderr)
+        logging.error(f"Failed to download the file. URL: {url}, Status code: {response.status_code}")
         raise ValueError(f"Failed to download the file. URL: {url}, Status code: {response.status_code}")
 
-    print(f"Calculating {algorithm} checksum for {url}...", file=sys.stderr)
+    print(f"Calculating {algorithm} checksum for {url}...")
+    logging.info(f"Calculating {algorithm} checksum for {url}...")
 
     # Save the file to disk for comparison
     filename = url.split("/")[-1]
@@ -118,7 +133,9 @@ def get_checksum(url, algorithm='sha512'):
         for chunk in iter(lambda: f.read(4096), b""):
             h.update(chunk)
     checksum = h.hexdigest()
-    print(f"Calculated {algorithm} checksum: {checksum}", file=sys.stderr)
+
+    print(f"Calculated {algorithm} checksum: {checksum}")
+    logging.info(f"Calculated {algorithm} checksum: {checksum}")
     return checksum
 
 # Update checksums in the PKGBUILD content
@@ -129,10 +146,12 @@ def update_checksums(content, url):
         old_checksum = old_checksum_line.group(1).strip("'\"")
         if old_checksum != 'SKIP':
             new_checksum = get_checksum(url, algorithm)
-            print(f"Replacing old {algorithm} checksum {old_checksum} with new checksum {new_checksum}...", file=sys.stderr)
+            print(f"Replacing old {algorithm} checksum {old_checksum} with new checksum {new_checksum}...")
+            logging.info(f"Replacing old {algorithm} checksum {old_checksum} with new checksum {new_checksum}...")
             content = content.replace(old_checksum, new_checksum)
     else:
-        print(f"Couldn't find {algorithm}sums in the PKGBUILD file. Make sure it exists and is not set to 'SKIP'.", file=sys.stderr)
+        print(f"[IGNORE if you are using PGP for verification] Couldn't find {algorithm}sums in the PKGBUILD file. Make sure it exists and is not set to 'SKIP'.", file=sys.stderr)
+        logging.error(f"[IGNORE if you are using PGP for verification] Couldn't find {algorithm}sums in the PKGBUILD file. Make sure it exists and is not set to 'SKIP'.")
     return content
 
 # Update the PKGBUILD script
@@ -160,8 +179,11 @@ def update_pkgbuild(repo):
         source_url = source_url.replace('${_pkgname}', repo_name)
         source_url = source_url.replace('${url}', pkgbuild_url_match.group(1).strip('"'))
     else:
+        print("Couldn't find source URL in the PKGBUILD file.", file=sys.stderr)
+        logging.error("Couldn't find source URL in the PKGBUILD file.")
         raise ValueError("Couldn't find source URL in the PKGBUILD file.")
-    print(f"Source URL: {source_url}", file=sys.stderr)
+    print(f"Source URL: {source_url}")
+    logging.info(f"Source URL: {source_url}")
 
     content = update_checksums(content, source_url)
 
@@ -181,11 +203,15 @@ def commit_changes(repo_dir, message):
     except GitCommandError as e:
         if 'nothing to commit' in str(e):
             print(f"Nothing to commit in {repo_dir}...")
+            logging.info(f"Nothing to commit in {repo_dir}...")
             return False
         else:
+            print(f"Failed to commit changes in {repo_dir} with message '{message}'. Error: {e}", file=sys.stderr)
+            logging.error(f"Failed to commit changes in {repo_dir} with message '{message}'. Error: {e}")
             raise e
     else:
         print(f"Committed changes in {repo_dir} with message '{message}'...")
+        logging.info(f"Committed changes in {repo_dir} with message '{message}'...")
         return True
 
 # Push changes
@@ -194,6 +220,7 @@ def push_changes(repo_dir):
     git = repo.git
     git.push()
     print(f"Pushed changes in {repo_dir}...")
+    logging.info(f"Pushed changes in {repo_dir}...")
 
 # Apply the changes to the submodules
 def apply_changes(repo):
@@ -230,12 +257,15 @@ def main():
                     push_changes(MAIN_REPO_DIR)
             except Exception as e:
                 print(f"Failed to update {repo['github_repo']}. Error: {str(e)}", file=sys.stderr)
+                logging.error(f"Failed to update {repo['github_repo']}. Error: {str(e)}")
 
         # Print the time for the next run
         next_run = datetime.datetime.now() + datetime.timedelta(seconds=SLEEP_DURATION)
         print("--------------------------------------------------")
         print(f"Sleeping for {SLEEP_DURATION} seconds...")
+        logging.info(f"Sleeping for {SLEEP_DURATION} seconds...")
         print(f"Next run will be at {next_run.isoformat()}")
+        logging.info(f"Next run will be at {next_run.isoformat()}")
 
         # Sleep for SLEEP_DURATION seconds
         time.sleep(SLEEP_DURATION)

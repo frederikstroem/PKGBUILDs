@@ -12,6 +12,7 @@ services:
       - GIT_EMAIL=git@katofln.com
     volumes:
       - ./updater.py:/home/builduser/updater.py
+      - ./logs:/home/builduser/logs
     build:
       context: .
       args:

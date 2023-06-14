@@ -3,3 +3,4 @@
 */*.asc
 .env
 ssh_key
+*.log
