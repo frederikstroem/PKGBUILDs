@@ -2,22 +2,10 @@ version: '3'
 
 services:
 
-  # https://github.com/mcuadros/ofelia
-  pkgbuild-updater-ofelia:
-    image: mcuadros/ofelia:latest # https://hub.docker.com/r/mcuadros/ofelia
-    depends_on:
-      - pkgbuild-updater
-    command: daemon --docker
-    container_name: pkgbuild-updater-ofelia
-    restart: unless-stopped
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
-    labels:
-      ofelia.job-run.pkgbuild-update.environment: '["TOKEN_GITHUB=${TOKEN_GITHUB}","GITHUB_USER=frederikstroem","GIT_NAME=frederikstroem","GIT_EMAIL=git@katofln.com"]'
-
   pkgbuild-updater:
     container_name: pkgbuild-updater
     environment:
+      - SLEEP_DURATION=14400  # This sets the sleep duration to 4 hours in seconds
       - TOKEN_GITHUB=${TOKEN_GITHUB}
       - GITHUB_USER=frederikstroem
       - GIT_NAME=frederikstroem
@@ -34,8 +22,3 @@ services:
       nofile:
         soft: 1024
         hard: 524288
-    labels:
-      - "ofelia.enabled=true"
-      - "ofelia.job-exec.update-script.schedule=@every 4h"
-      - "ofelia.job-exec.update-script.command=python /home/builduser/updater.py"
-      - "ofelia.job-exec.update-script.no-overlap=true"

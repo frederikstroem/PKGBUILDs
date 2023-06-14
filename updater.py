@@ -1,4 +1,6 @@
 import os
+import time
+import datetime
 import sys
 import re
 import shutil
@@ -7,6 +9,9 @@ import subprocess
 import requests
 
 from git import Repo, GitCommandError
+
+# Get the sleep duration from environment variable
+SLEEP_DURATION = int(os.getenv('SLEEP_DURATION', 14400))  # Default to 4 hours if not set
 
 # get the directory of the current script
 script_dir = os.path.dirname(os.path.realpath(__file__))
@@ -207,23 +212,33 @@ def apply_changes(repo):
 
 # Main loop
 def main():
-    reset_and_clean(MAIN_REPO_DIR)
-    for repo in REPOS:
-        try:
-            reset_and_clean(repo['appimage_submodule_dir'])
-            update_pkgbuild(repo)
-            apply_changes(repo)
-            # Commit changes to the submodule
-            commit_message = f"Bumped {repo['github_repo']} to version {get_latest_tag(*repo['github_repo'].split('/'))}"
-            submodule_changes = commit_changes(repo['appimage_submodule_dir'], commit_message)
+    while True:  # Infinite loop
+        reset_and_clean(MAIN_REPO_DIR)
+        for repo in REPOS:
+            try:
+                reset_and_clean(repo['appimage_submodule_dir'])
+                update_pkgbuild(repo)
+                apply_changes(repo)
+                # Commit changes to the submodule
+                commit_message = f"Bumped {repo['github_repo']} to version {get_latest_tag(*repo['github_repo'].split('/'))}"
+                submodule_changes = commit_changes(repo['appimage_submodule_dir'], commit_message)
 
-            # If there were changes in the submodule, commit the changes in the main repo
-            if submodule_changes:
-                commit_changes(MAIN_REPO_DIR, commit_message)
-                push_changes(repo['appimage_submodule_dir'])
-                push_changes(MAIN_REPO_DIR)
-        except Exception as e:
-            print(f"Failed to update {repo['github_repo']}. Error: {str(e)}", file=sys.stderr)
+                # If there were changes in the submodule, commit the changes in the main repo
+                if submodule_changes:
+                    commit_changes(MAIN_REPO_DIR, commit_message)
+                    push_changes(repo['appimage_submodule_dir'])
+                    push_changes(MAIN_REPO_DIR)
+            except Exception as e:
+                print(f"Failed to update {repo['github_repo']}. Error: {str(e)}", file=sys.stderr)
+
+        # Print the time for the next run
+        next_run = datetime.datetime.now() + datetime.timedelta(seconds=SLEEP_DURATION)
+        print("--------------------------------------------------")
+        print(f"Sleeping for {SLEEP_DURATION} seconds...")
+        print(f"Next run will be at {next_run.isoformat()}")
+
+        # Sleep for SLEEP_DURATION seconds
+        time.sleep(SLEEP_DURATION)
 
 if __name__ == "__main__":
     main()

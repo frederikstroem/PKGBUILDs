@@ -60,4 +60,5 @@ RUN gpg --import /home/builduser/featherwallet.asc
 ARG GIT_REPO
 RUN git clone --recurse-submodules "${GIT_REPO}"
 
-CMD tail -f /dev/null
+# Run the script when the container launches
+CMD ["python", "./updater.py"]
