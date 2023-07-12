@@ -92,6 +92,16 @@ def get_old_version(pkgbuild_file):
         else:
             raise ValueError("Couldn't find pkgver in the PKGBUILD file.")
 
+# Retrieve the current package release number from the PKGBUILD script
+def get_old_pkgrel(pkgbuild_file):
+    with open(pkgbuild_file, 'r') as f:
+        content = f.read()
+        old_pkgrel_match = re.search(r'pkgrel=(.+?)\n', content)
+        if old_pkgrel_match:
+            return old_pkgrel_match.group(1)
+        else:
+            raise ValueError("Couldn't find pkgrel in the PKGBUILD file.")
+
 # Get the latest stable version (tag) from the GitHub repository
 def get_latest_tag(owner, repo):
     url = f'https://api.github.com/repos/{owner}/{repo}/tags'
@@ -159,6 +169,7 @@ def update_pkgbuild(repo):
     appimage_dir = repo['appimage_dir']
     pkgbuild_file = os.path.join(appimage_dir, 'PKGBUILD')
     old_version = get_old_version(pkgbuild_file)
+    old_pkgrel = get_old_pkgrel(pkgbuild_file)
     github_repo = repo['github_repo']
     owner, repo_name = github_repo.split('/')
     latest_tag = get_latest_tag(owner, repo_name)
@@ -166,32 +177,43 @@ def update_pkgbuild(repo):
     with open(pkgbuild_file, 'r') as f:
         content = f.read()
 
-    content = content.replace(old_version, latest_tag)
+    if old_version != latest_tag:  # If a new version is found
+        print(f"New version for {github_repo} found: {latest_tag}! Updating PKGBUILD...")
+        logging.info(f"New version for {github_repo} found: {latest_tag}! Updating PKGBUILD...")
+        content = content.replace(old_version, latest_tag)  # Update version
 
-    # Extract url from PKGBUILD content and store in pkgbuild_url
-    pkgbuild_url_match = re.search(r'url=(.+?)\n', content)
+        content = content.replace(f"pkgrel={old_pkgrel}", "pkgrel=1")  # Reset pkgrel to 1
+        logging.info(f"Updating pkgrel from {old_pkgrel} to 1...")
 
-    # Extract source URL and substitute the variables from the PKGBUILD file
-    source_url_match = re.search(r'source=\("(.*?)"', content)
-    if source_url_match:
-        source_url = source_url_match.group(1).strip('"')
-        source_url = source_url.replace('${pkgver}', latest_tag)
-        source_url = source_url.replace('${_pkgname}', repo_name)
-        source_url = source_url.replace('${url}', pkgbuild_url_match.group(1).strip('"'))
-        source_url = source_url.replace('${_appimage}', f'{repo_name}-{latest_tag}.appimage')
+        # Extract url from PKGBUILD content and store in pkgbuild_url
+        pkgbuild_url_match = re.search(r'url=(.+?)\n', content)
+
+        # Extract source URL and substitute the variables from the PKGBUILD file
+        source_url_match = re.search(r'source=\("(.*?)"', content)
+        if source_url_match:
+            source_url = source_url_match.group(1).strip('"')
+            source_url = source_url.replace('${pkgver}', latest_tag)
+            source_url = source_url.replace('${_pkgname}', repo_name)
+            source_url = source_url.replace('${url}', pkgbuild_url_match.group(1).strip('"'))
+            source_url = source_url.replace('${_appimage}', f'{repo_name}-{latest_tag}.appimage')
+        else:
+            print("Couldn't find source URL in the PKGBUILD file.", file=sys.stderr)
+            logging.error("Couldn't find source URL in the PKGBUILD file.")
+            raise ValueError("Couldn't find source URL in the PKGBUILD file.")
+        print(f"Source URL: {source_url}")
+        logging.info(f"Source URL: {source_url}")
+
+        content = update_checksums(content, source_url)
+
+        with open(pkgbuild_file, 'w') as f:
+            f.write(content)
+
+        test_pkgbuild(appimage_dir)
+
     else:
-        print("Couldn't find source URL in the PKGBUILD file.", file=sys.stderr)
-        logging.error("Couldn't find source URL in the PKGBUILD file.")
-        raise ValueError("Couldn't find source URL in the PKGBUILD file.")
-    print(f"Source URL: {source_url}")
-    logging.info(f"Source URL: {source_url}")
-
-    content = update_checksums(content, source_url)
-
-    with open(pkgbuild_file, 'w') as f:
-        f.write(content)
-
-    test_pkgbuild(appimage_dir)
+        print(f"No new version found for {github_repo}. Skipping...")
+        logging.info(f"No new version found for {github_repo}. Skipping...")
+        logging.info(f"PKGREL is: {old_pkgrel}")
 
 # Handle the commits
 def commit_changes(repo_dir, message):
