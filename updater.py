@@ -178,6 +178,7 @@ def update_pkgbuild(repo):
         source_url = source_url.replace('${pkgver}', latest_tag)
         source_url = source_url.replace('${_pkgname}', repo_name)
         source_url = source_url.replace('${url}', pkgbuild_url_match.group(1).strip('"'))
+        source_url = source_url.replace('${_appimage}', f'{repo_name}-{latest_tag}.appimage')
     else:
         print("Couldn't find source URL in the PKGBUILD file.", file=sys.stderr)
         logging.error("Couldn't find source URL in the PKGBUILD file.")
