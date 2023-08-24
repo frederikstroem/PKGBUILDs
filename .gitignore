@@ -1,4 +1,5 @@
 *.AppImage
+*.src.tar.gz
 *.zst
 */*.asc
 .env
