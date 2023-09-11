@@ -188,6 +188,18 @@ def update_pkgbuild(repo):
         # Extract url from PKGBUILD content and store in pkgbuild_url
         pkgbuild_url_match = re.search(r'url=(.+?)\n', content)
 
+        # Extract _appimage from PKGBUILD content
+        _appimage_match = re.search(r'_appimage=(.+?)\n', content)
+        if _appimage_match:
+            _appimage_value = _appimage_match.group(1).strip('"')
+            _appimage_value = _appimage_value.replace('${pkgver}', latest_tag)
+            _appimage_value = _appimage_value.replace('${_pkgname}', repo_name)
+            _appimage_value = _appimage_value.replace('${arch}', 'x86_64')  # Assuming x86_64 as the default architecture
+        else:
+            print("Couldn't find _appimage in the PKGBUILD file.", file=sys.stderr)
+            logging.error("Couldn't find _appimage in the PKGBUILD file.")
+            raise ValueError("Couldn't find _appimage in the PKGBUILD file.")
+
         # Extract source URL and substitute the variables from the PKGBUILD file
         source_url_match = re.search(r'source=\("(.*?)"', content)
         if source_url_match:
@@ -195,7 +207,7 @@ def update_pkgbuild(repo):
             source_url = source_url.replace('${pkgver}', latest_tag)
             source_url = source_url.replace('${_pkgname}', repo_name)
             source_url = source_url.replace('${url}', pkgbuild_url_match.group(1).strip('"'))
-            source_url = source_url.replace('${_appimage}', f'{repo_name}-{latest_tag}.appimage')
+            source_url = source_url.replace('${_appimage}', _appimage_value)
         else:
             print("Couldn't find source URL in the PKGBUILD file.", file=sys.stderr)
             logging.error("Couldn't find source URL in the PKGBUILD file.")
