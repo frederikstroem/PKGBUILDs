@@ -80,7 +80,12 @@ def reset_and_clean(repo_dir):
 
 # Test the PKGBUILD script using makepkg command
 def test_pkgbuild(pkgbuild_dir):
-    subprocess.check_call(['makepkg', '-f', '--clean'], cwd=pkgbuild_dir)
+    try:
+        subprocess.check_call(['makepkg', '-f', '--clean'], cwd=pkgbuild_dir)
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Failed to build the package in {pkgbuild_dir}. Error: {e}")
+        print(f"Failed to build the package in {pkgbuild_dir}. Aborting...")
+        raise
 
 # Retrieve the current version from the PKGBUILD script
 def get_old_version(pkgbuild_file):
