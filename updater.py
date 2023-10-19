@@ -18,7 +18,7 @@ if not os.path.exists('logs'):
 logging.basicConfig(filename='./logs/updater.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Get the sleep duration from environment variable
-SLEEP_DURATION = int(os.getenv('SLEEP_DURATION', 14400))  # Default to 4 hours if not set
+SLEEP_DURATION = int(os.getenv('SLEEP_DURATION', 3600))  # Default to 1 hours if not set
 
 # get the directory of the current script
 script_dir = os.path.dirname(os.path.realpath(__file__))
