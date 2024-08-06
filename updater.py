@@ -156,7 +156,7 @@ def get_checksum(url, algorithm='sha512'):
 # Update checksums in the PKGBUILD content
 def update_checksums(content, url):
     algorithm = 'sha512'
-    old_checksum_line = re.search(f'{algorithm}sums=\((.*?)\)', content)
+    old_checksum_line = re.search(rf'{algorithm}sums=\((.*?)\)', content)
     if old_checksum_line:
         old_checksum = old_checksum_line.group(1).strip("'\"")
         if old_checksum != 'SKIP':
