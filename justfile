@@ -40,11 +40,11 @@ apply-pkgbuilds:
 
 commit-and-push pkgbuild-dir:
     git -C {{pkgbuild-dir}}/{{pkgbuild-dir}} add --all
-    git -C {{pkgbuild-dir}}/{{pkgbuild-dir}} commit -m "Bumped version"
-    git -C {{pkgbuild-dir}}/{{pkgbuild-dir}} push
+    -git -C {{pkgbuild-dir}}/{{pkgbuild-dir}} commit -m "Bumped version"
+    -git -C {{pkgbuild-dir}}/{{pkgbuild-dir}} push
     git add {{pkgbuild-dir}}
-    git commit -m "Bumped version for {{pkgbuild-dir}}"
-    git push
+    -git commit -m "Bumped version for {{pkgbuild-dir}}"
+    -git push
 
 commit-and-push-all:
     just commit-and-push {{chatbox_dir}}
