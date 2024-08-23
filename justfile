@@ -7,8 +7,7 @@ full-flow:
     just init-and-reset-submodules
     just test-pkgbuilds
     just apply-pkgbuilds
-    just commit-and-push {{chatbox_dir}}
-    just commit-and-push {{featherwallet_dir}}
+    just commit-and-push-all
 
 reset-submodule submodule-dir:
     git -C {{submodule-dir}} restore .
@@ -46,3 +45,7 @@ commit-and-push pkgbuild-dir:
     git add {{pkgbuild-dir}}
     git commit -m "Bumped version for {{pkgbuild-dir}}"
     git push
+
+commit-and-push-all:
+    just commit-and-push {{chatbox_dir}}
+    just commit-and-push {{featherwallet_dir}}
