@@ -1,6 +1,8 @@
 [submodule "featherwallet-appimage/featherwallet-appimage"]
 	path = featherwallet-appimage/featherwallet-appimage
 	url = ssh://aur@aur.archlinux.org/featherwallet-appimage.git
+	branch = master
 [submodule "chatbox-appimage/chatbox-appimage"]
 	path = chatbox-appimage/chatbox-appimage
 	url = ssh://aur@aur.archlinux.org/chatbox-appimage.git
+	branch = master
