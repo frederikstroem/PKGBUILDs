@@ -1,3 +1,5 @@
+⚠️ **2024-08-23:** The automations for both Feather and Chatbox have stopped working and have been disabled. The automation was based on GitHub releases, but both packages have stopped using the GitHub releases feature. For now, the packages will be updated manually while I work on a new Rust-based automation tool.
+
 # PKGBUILDs
 PKGBUILDs for the [AUR](https://aur.archlinux.org/) (Arch User Repository).
 
