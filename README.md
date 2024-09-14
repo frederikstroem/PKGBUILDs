@@ -15,6 +15,6 @@ AUR account: [frederikstroem](https://aur.archlinux.org/account/frederikstroem/)
 ## 💬 [Chatbox](https://aur.archlinux.org/packages/chatbox-appimage/)
 *"Your Ultimate Copilot on the Desktop. Chatbox is a desktop app for GPT-4 / GPT-3.5 (OpenAI API) that supports Windows, Mac & Linux."*
 
-**Website:** [chatboxapp.xyz](https://chatboxapp.xyz/)
+**Website:** [chatboxai.app](https://chatboxai.app/)
 
 **GitHub:** [Bin-Huang/Chatbox](https://github.com/Bin-Huang/chatbox)
