@@ -3,6 +3,9 @@ chatbox_dir := "chatbox-appimage"
 featherwallet_dir := "featherwallet-appimage"
 submodule_branch := "master"
 
+default:
+  just --list
+
 full-flow:
     just init-and-reset-submodules
     just test-pkgbuilds
