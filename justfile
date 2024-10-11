@@ -15,9 +15,10 @@ full-flow:
 reset-submodule submodule-dir:
     git -C {{submodule-dir}} restore .
     git -C {{submodule-dir}} clean -fdx
-    git -C {{submodule-dir}} pull
+    git -C {{submodule-dir}} fetch
     git -C {{submodule-dir}} checkout {{submodule_branch}}
     git -C {{submodule-dir}} reset --hard origin/{{submodule_branch}}
+    git -C {{submodule-dir}} pull
 
 init-and-reset-submodules:
     git submodule update --init --recursive
