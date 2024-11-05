@@ -12,6 +12,12 @@ full-flow:
     just apply-pkgbuilds
     just commit-and-push-all
 
+full-flow-limit-to pkgbuild-dir:
+    just init-and-reset-submodules
+    just test-pkgbuild {{pkgbuild-dir}}
+    just apply-pkgbuild {{pkgbuild-dir}}
+    just commit-and-push {{pkgbuild-dir}}
+
 reset-submodule submodule-dir:
     git -C {{submodule-dir}} restore .
     git -C {{submodule-dir}} clean -fdx
